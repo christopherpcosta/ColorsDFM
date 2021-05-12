@@ -22,14 +22,7 @@
     "default_icon": {
       "20": "icons/beasts-32.png"
     },
-    "default_title": "Beastify",
+    "default_title": "Beastify DFM",
     "default_popup": "popup/choose_beast.html"
-  },
-
-  "web_accessible_resources": [
-    "beasts/frog.jpg",
-    "beasts/turtle.jpg",
-    "beasts/snake.jpg"
-  ]
-
+  }
 }
