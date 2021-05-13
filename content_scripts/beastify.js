@@ -9,10 +9,10 @@
   }
   window.hasRun = true;
 
-
   window.setInterval(() => {
     SetColorsToList();
     SetColorToCase(null);
+    cleanExpired();
   }, 5000);
 
   function SetColorsToList() {
@@ -31,9 +31,15 @@
     if (color != null) {
       let databaseColorKey = "COLOR_" + firstNumberFound;
 
-      chrome.storage.sync.set({ [databaseColorKey]: color }, function () {
-        console.log("New color " + color + " set to " + firstNumberFound);
-      });
+      chrome.storage.sync.set({
+        [databaseColorKey]: {
+          'color': color,
+          'timestamp': Date.now()
+        }
+      },
+        function () {
+          console.log("New color " + color + " set to " + firstNumberFound);
+        });
 
       setColorsToElements(caseNumber, "ariaLabel");
     }
@@ -49,11 +55,11 @@
       if (whereToLook == "ariaLabel")
         possibleNumber = element.ariaLabel;
 
-      let isNumberMatch = null; 
-      
+      let isNumberMatch = null;
+
       isNumberMatch = possibleNumber.match(/\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/);
-      
-      if(isNumberMatch == null)
+
+      if (isNumberMatch == null)
         isNumberMatch = possibleNumber.match(/CAS-/);
 
       if (isNumberMatch != null) {
@@ -61,22 +67,30 @@
 
         chrome.storage.sync.get([databaseColorKey], function (result) {
           if (result.hasOwnProperty(databaseColorKey)) {
-            element.style.backgroundColor = result[databaseColorKey];
-            if(result[databaseColorKey] == 'Black')
-            {
+            element.style.backgroundColor = result[databaseColorKey].color;
+            if (result[databaseColorKey] == 'Black') {
               element.style.color = 'white'
             }
-            else
-            {
+            else {
               element.style.color = 'black'
             }
           }
         });
 
-        if(whereToLook == "ariaLabel")
+        if (whereToLook == "ariaLabel")
           return isNumberMatch[0];
       }
     }
+  }
+
+  function cleanExpired() {
+    chrome.storage.sync.get(null, function (result) {
+      Object.keys(result).forEach(key => {
+        if (new Date(result[key].timestamp) < Date.now() - (86400000 * 60)) {
+          chrome.storage.sync.remove(key)
+        }
+      });
+    });
   }
 
   chrome.runtime.onMessage.addListener((message) => {
